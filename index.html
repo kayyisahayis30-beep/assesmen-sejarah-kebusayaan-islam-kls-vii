@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asesmen Sumatif SKI Kelas VII</title>
+    <style>
+        :root {
+            --primary: #047857;
+            --secondary: #10b981;
+            --bg: #f3f4f6;
+            --text: #1f2937;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .hidden { display: none !important; }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; font-weight: bold; margin-bottom: 0.5rem; }
+        input[type="text"], input[type="password"], input[type="number"], select, textarea {
+            width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;
+        }
+        button {
+            background-color: var(--primary); color: white; border: none; padding: 0.5rem 1rem;
+            border-radius: 4px; cursor: pointer; font-size: 1rem;
+        }
+        button:hover { background-color: var(--secondary); }
+        .btn-danger { background-color: #dc2626; }
+        .btn-danger:hover { background-color: #ef4444; }
+        .header-info { display: flex; justify-content: space-between; margin-bottom: 1rem; font-weight: bold; }
+        .timer { font-size: 1.2rem; color: #dc2626; }
+        .question-box { margin-bottom: 1.5rem; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 4px; }
+        .options label { font-weight: normal; display: block; margin-bottom: 0.5rem; }
+        .match-row { display: flex; gap: 1rem; margin-bottom: 0.5rem; align-items: center; }
+        .match-row select { width: 50%; }
+        #logo-container img { max-height: 80px; margin-bottom: 10px; }
+        .identity-header { text-align: center; border-bottom: 2px solid var(--primary); padding-bottom: 1rem; margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div id="logo-container">
+            <img id="app-logo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Logo_Nahdlatul_Ulama_%28NU%29.svg/1024px-Logo_Nahdlatul_Ulama_%28NU%29.svg.png" alt="Logo">
+        </div>
+        <h2>Asesmen Sumatif Sejarah Kebudayaan Islam (SKI)</h2>
+        <p>Kelas VII MTs Mu'allimin NU | Oleh: Amirotul Kayyisah, S.Pd.</p>
+    </header>
+
+    <!-- Halaman Login -->
+    <div id="page-login" class="container">
+        <h3>Login Sistem</h3>
+        <div class="form-group">
+            <label>Login Sebagai:</label>
+            <select id="login-role" onchange="toggleLoginFields()">
+                <option value="siswa">Siswa</option>
+                <option value="admin">Admin / Guru</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label id="lbl-username">Nama Lengkap (Username):</label>
+            <input type="text" id="login-username" placeholder="Masukkan nama/username">
+        </div>
+        <div class="form-group" id="fg-kelas">
+            <label>Kelas:</label>
+            <select id="login-kelas">
+                <option value="VII-A">VII-A</option>
+                <option value="VII-B">VII-B</option>
+                <option value="VII-C">VII-C</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label id="lbl-password">No. Presensi (Password):</label>
+            <input type="password" id="login-password" placeholder="Masukkan password/no. presensi">
+        </div>
+        <button onclick="login()">Masuk</button>
+    </div>
+
+    <!-- Halaman Admin -->
+    <div id="page-admin" class="container hidden">
+        <h3>Dashboard Admin / Guru</h3>
+        <p>Selamat datang, Admin. KKM: 80 | Waktu: 90 Menit</p>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+            <button onclick="startExam('admin')">Uji Coba Soal (Mode Siswa)</button>
+            <button onclick="showEditLogo()">Edit Logo</button>
+            <button onclick="showEditPassword()">Ganti Password Admin</button>
+            <button class="btn-danger" onclick="logout()">Logout</button>
+        </div>
+        
+        <div id="admin-tools">
+            <h4>Editor Bank Soal (Data JSON)</h4>
+            <p style="font-size: 0.8rem; color: #666;">Anda dapat mengedit soal secara langsung melalui format JSON di bawah ini. Pastikan format tanda kutip dan kurung sesuai.</p>
+            <textarea id="json-editor" rows="15"></textarea>
+            <button onclick="saveQuestions()" style="margin-top: 10px;">Simpan Perubahan Soal</button>
+        </div>
+    </div>
+
+    <!-- Halaman Ujian -->
+    <div id="page-exam" class="container hidden">
+        <div class="header-info">
+            <span id="exam-student-name">Nama: -</span>
+            <span id="exam-student-class">Kelas: -</span>
+            <span class="timer">Sisa Waktu: <span id="time-display">90:00</span></span>
+        </div>
+        <div id="exam-content"></div>
+        <button onclick="submitExam()" style="width: 100%; margin-top: 2rem; font-size: 1.2rem; padding: 1rem;">Kumpulkan Jawaban</button>
+    </div>
+
+    <!-- Halaman Hasil -->
+    <div id="page-result" class="container hidden">
+        <div class="identity-header">
+            <h3>Hasil Asesmen Sumatif SKI</h3>
+            <p>MTs Mu'allimin NU</p>
+        </div>
+        <div class="header-info" style="display: block; text-align: center;">
+            <p><strong>Nama:</strong> <span id="res-nama"></span></p>
+            <p><strong>Kelas:</strong> <span id="res-kelas"></span></p>
+            <p><strong>No. Presensi:</strong> <span id="res-presensi"></span></p>
+            <h1 style="font-size: 4rem; margin: 1rem 0;" id="res-score">100</h1>
+            <h3 id="res-status"></h3>
+        </div>
+        <div style="text-align: center; gap: 1rem; display: flex; justify-content: center;">
+            <button onclick="downloadResult()">Download Hasil (TXT)</button>
+            <button onclick="logout()">Kembali ke Menu Awal</button>
+        </div>
+    </div>
+
+<script>
+    // Inisialisasi Data Aplikasi
+    const KKM = 80;
+    const TIME_LIMIT = 90 * 60; // 90 menit dalam detik
+    const MAX_ATTEMPTS = 2;
+    
+    // Default Admin
+    if(!localStorage.getItem('adminUser')) localStorage.setItem('adminUser', 'admin');
+    if(!localStorage.getItem('adminPass')) localStorage.setItem('adminPass', 'admin123');
+    if(!localStorage.getItem('appLogo')) localStorage.setItem('appLogo', 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Logo_Nahdlatul_Ulama_%28NU%29.svg/1024px-Logo_Nahdlatul_Ulama_%28NU%29.svg.png');
+
+    document.getElementById('app-logo').src = localStorage.getItem('appLogo');
+
+    // 35 Soal (15 PG, 10 PGK, 10 Menjodohkan)
+    const defaultQuestions = {
+        pg: [
+            { q: "Masyarakat Makkah sebelum kedatangan Islam sering melakukan perniagaan hingga ke negeri Syam dan Yaman. Dalam berniaga, mereka sering kali menipu timbangan untuk meraih untung besar. Praktik ini menunjukkan kondisi masyarakat yang disebut...", options: ["A. Jahiliyah dalam aspek moral dan ekonomi", "B. Maju dalam strategi perdagangan", "C. Memiliki toleransi beragama yang tinggi", "D. Menerapkan sistem ekonomi kerakyatan"], answer: 0 },
+            { q: "Nabi Muhammad SAW pertama kali berdakwah secara sembunyi-sembunyi di rumah salah satu sahabat. Pendekatan ini dilakukan karena mempertimbangkan kondisi sosial masyarakat Makkah yang masih kuat memegang tradisi nenek moyang. Rumah yang dijadikan pusat dakwah tersebut adalah milik...", options: ["A. Abu Bakar Ash-Shiddiq", "B. Arqam bin Abil Arqam", "C. Umar bin Khattab", "D. Ali bin Abi Thalib"], answer: 1 },
+            { q: "Ketika Nabi Muhammad SAW mulai berdakwah secara terang-terangan di Bukit Shafa, tanggapan mayoritas pemuka Quraisy adalah penolakan keras. Tokoh yang secara terang-terangan memaki Nabi saat itu adalah...", options: ["A. Abu Jahal", "B. Abu Thalib", "C. Abu Lahab", "D. Umayyah bin Khalaf"], answer: 2 },
+            { q: "Seorang siswa di MTs Mu'allimin NU menemukan temannya sedang dikucilkan. Ia teringat kisah pemboikotan kafir Quraisy terhadap Bani Hasyim dan Bani Muthalib yang berlangsung selama tiga tahun. Alasan utama kaum Quraisy melakukan pemboikotan tersebut adalah...", options: ["A. Karena Bani Hasyim menguasai jalur perdagangan", "B. Untuk memaksa Bani Hasyim menyerahkan Nabi Muhammad SAW", "C. Persaingan kekuasaan antara Bani Hasyim dan Bani Umayyah", "D. Karena krisis ekonomi yang melanda Makkah"], answer: 1 },
+            { q: "Penduduk Yatsrib (Madinah) sebelum Islam terdiri dari berbagai suku yang sering bertikai, khususnya dua suku besar dari bangsa Arab. Konflik ini baru mereda setelah kedatangan Nabi Muhammad SAW. Dua suku tersebut adalah...", options: ["A. Aus dan Khazraj", "B. Qainuqa dan Nadhir", "C. Quraisy dan Hawazin", "D. Bakr dan Taghlib"], answer: 0 },
+            { q: "Peristiwa Hijrah ke Madinah bukan sekadar pelarian fisik, melainkan strategi dakwah. Saat tiba di Madinah, langkah pertama yang dilakukan Nabi Muhammad SAW untuk membangun peradaban adalah...", options: ["A. Membangun pasar untuk umat Islam", "B. Membangun Masjid Nabawi", "C. Menyusun Piagam Madinah", "D. Membentuk pasukan perang"], answer: 1 },
+            { q: "Nabi Muhammad SAW mempersaudarakan kaum Muhajirin dan Anshar untuk menciptakan ikatan sosial yang kuat. Nilai karakter yang paling menonjol dari kaum Anshar dalam peristiwa ini dan patut diteladani adalah...", options: ["A. Keberanian dalam berperang", "B. Kedermawanan dan pengorbanan yang tulus", "C. Kecerdasan dalam berdagang", "D. Kemampuan bertani yang handal"], answer: 1 },
+            { q: "Piagam Madinah merupakan kesepakatan tertulis yang mengatur kehidupan bersama di Madinah. Salah satu poin penting dalam piagam tersebut yang relevan dengan kehidupan berbangsa di Indonesia saat ini adalah...", options: ["A. Umat Islam memonopoli pemerintahan", "B. Kebebasan beragama dan saling melindungi dari serangan luar", "C. Pengusiran kaum Yahudi dari Madinah", "D. Kewajiban membayar pajak yang tinggi bagi non-Muslim"], answer: 1 },
+            { q: "Sebelum Islam datang, masyarakat Arab memiliki tradisi sastra yang tinggi. Mereka sering mengadakan perlombaan membuat syair. Pasar tempat diadakannya festival syair tersebut adalah...", options: ["A. Pasar Mina", "B. Pasar Ukaz", "C. Pasar Qainuqa", "D. Pasar Madinah"], answer: 1 },
+            { q: "Dalam menghadapi rintangan dakwah, Nabi Muhammad SAW pernah pergi ke Thaif dengan harapan mendapat dukungan. Namun, beliau justru dilempari batu. Hikmah utama dari peristiwa ini bagi seorang pendakwah adalah...", options: ["A. Harus membalas perbuatan buruk dengan setimpal", "B. Menyerah jika menghadapi kesulitan", "C. Sabar, pantang menyerah, dan mendoakan kebaikan bagi orang yang memusuhi", "D. Mencari perlindungan kepada raja-raja yang kuat"], answer: 2 },
+            { q: "Pada Perjanjian Aqabah I dan II, penduduk Yatsrib berbaiat kepada Nabi Muhammad SAW. Makna penting dari perjanjian ini bagi perkembangan Islam adalah...", options: ["A. Penyerahan kekuasaan Makkah kepada Yatsrib", "B. Jaminan keamanan dan dukungan bagi Nabi untuk hijrah ke Yatsrib", "C. Kesepakatan untuk memerangi suku-suku Arab lainnya", "D. Pembagian harta rampasan perang"], answer: 1 },
+            { q: "Masyarakat Makkah sebelum Islam percaya pada takhayul dan menyembah berhala, seperti Hubal, Latta, dan Uzza. Praktik menyekutukan Allah ini dalam Islam disebut...", options: ["A. Nifaq", "B. Fasiq", "C. Syirik", "D. Riddah"], answer: 2 },
+            { q: "Sahabat yang menggantikan posisi tidur Nabi Muhammad SAW di ranjangnya saat malam hijrah, untuk mengelabui kepungan pemuda Quraisy adalah...", options: ["A. Abu Bakar Ash-Shiddiq", "B. Umar bin Khattab", "C. Utsman bin Affan", "D. Ali bin Abi Thalib"], answer: 3 },
+            { q: "Gelar 'Al-Amin' yang disematkan kepada Nabi Muhammad SAW oleh masyarakat Makkah bahkan sebelum beliau menjadi Rasul, menunjukkan bahwa beliau memiliki sifat...", options: ["A. Sangat cerdas", "B. Berani di medan perang", "C. Dapat dipercaya", "D. Pandai berpidato"], answer: 2 },
+            { q: "Nabi Muhammad SAW berhasil membangun masyarakat Madinah yang heterogen menjadi masyarakat yang damai dan berperadaban. Hal ini membuktikan bahwa Islam adalah agama yang membawa misi...", options: ["A. Rahmatan lil 'Alamin", "B. Ekspansi wilayah", "C. Penyatuan suku Arab saja", "D. Penghancuran tradisi lokal"], answer: 0 }
+        ],
+        pgk: [
+            { q: "Dalam menyebarkan Islam di Makkah, Nabi Muhammad SAW menghadapi berbagai tantangan berat dari kaum kafir Quraisy. Berdasarkan sejarah, tindakan yang dilakukan kafir Quraisy untuk menghentikan dakwah Nabi meliputi... (Pilih 2 atau lebih)", options: ["Melakukan pemboikotan terhadap Bani Hasyim", "Menawarkan harta, tahta, dan wanita kepada Nabi", "Membantu umat Islam membangun masjid di Makkah", "Menyiksa para budak yang masuk Islam, seperti Bilal bin Rabah"], answer: [0, 1, 3] },
+            { q: "Masyarakat Yatsrib sebelum kedatangan Islam memiliki komposisi penduduk yang beragam. Kelompok besar yang mendiami Yatsrib pada masa itu adalah... (Pilih 2 atau lebih)", options: ["Suku Aus dan Khazraj", "Kaum Yahudi (Bani Nadhir, Qainuqa, Quraizhah)", "Suku Quraisy", "Pasukan Romawi"], answer: [0, 1] },
+            { q: "Piagam Madinah mengatur kehidupan bermasyarakat yang plural. Nilai-nilai universal yang terkandung dalam Piagam Madinah antara lain... (Pilih 2 atau lebih)", options: ["Keadilan", "Toleransi beragama", "Eksklusivitas umat Islam", "Gotong royong dalam mempertahankan negara"], answer: [0, 1, 3] },
+            { q: "Faktor yang menyebabkan penduduk Yatsrib lebih mudah menerima ajaran Islam dibandingkan penduduk Makkah adalah... (Pilih 2 atau lebih)", options: ["Mereka sering mendengar tentang akan datangnya Nabi baru dari kaum Yahudi", "Kelelahan akibat perang saudara (Bu'ats) yang berkepanjangan", "Mereka dijanjikan kekayaan oleh Nabi", "Sifat masyarakat agraris yang lebih lembut dibandingkan masyarakat nomaden/pedagang keras"], answer: [0, 1, 3] },
+            { q: "Sifat-sifat tercela masyarakat Jahiliyah Makkah yang berusaha dihapuskan oleh ajaran Islam antara lain... (Pilih 2 atau lebih)", options: ["Mengubur hidup-hidup bayi perempuan", "Memuliakan tamu", "Minum khamar dan berjudi", "Menghormati bulan-bulan haram"], answer: [0, 2] },
+            { q: "Langkah-langkah strategis Nabi Muhammad SAW dalam membangun masyarakat Madinah meliputi... (Pilih 2 atau lebih)", options: ["Membangun Masjid Nabawi sebagai pusat kegiatan", "Mempersaudarakan Muhajirin dan Anshar", "Memaksa seluruh penduduk Yahudi masuk Islam", "Membuat perjanjian damai (Piagam Madinah)"], answer: [0, 1, 3] },
+            { q: "Sahabat Nabi yang termasuk dalam kelompok *Assabiqunal Awwalun* (orang-orang yang pertama kali masuk Islam) adalah... (Pilih 2 atau lebih)", options: ["Khadijah binti Khuwailid", "Abu Jahal", "Abu Bakar Ash-Shiddiq", "Ali bin Abi Thalib"], answer: [0, 2, 3] },
+            { q: "Faktor penyebab kaum Quraisy menentang keras ajaran Nabi Muhammad SAW adalah... (Pilih 2 atau lebih)", options: ["Ketakutan kehilangan kekuasaan dan status sosial", "Islam menentang praktik perbudakan", "Kekhawatiran akan runtuhnya bisnis pembuatan berhala", "Islam mendukung penuh tradisi suku Quraisy"], answer: [0, 1, 2] },
+            { q: "Hikmah dari peristiwa Hijrah yang dapat diterapkan oleh siswa dalam kehidupan sehari-hari adalah... (Pilih 2 atau lebih)", options: ["Meninggalkan kebiasaan buruk (malas) menuju kebiasaan baik (rajin)", "Melarikan diri dari tanggung jawab", "Rela berkorban untuk mencapai tujuan yang mulia", "Pentingnya perencanaan matang dalam setiap kegiatan"], answer: [0, 2, 3] },
+            { q: "Peran masjid pada masa awal pemerintahan Nabi di Madinah bukan hanya untuk shalat, melainkan juga berfungsi sebagai... (Pilih 2 atau lebih)", options: ["Pusat pendidikan dan musyawarah", "Tempat merencanakan strategi perang", "Pusat perbelanjaan utama", "Tempat pengadilan dan penyelesaian sengketa"], answer: [0, 1, 3] }
+        ],
+        jodohkan: [
+            { q: "Tempat Nabi menerima wahyu pertama", a: "Gua Hira" },
+            { q: "Raja Habasyah (Ethiopia) yang melindungi umat Islam saat hijrah pertama", a: "Raja Najasyi" },
+            { q: "Paman Nabi yang melindunginya, namun wafat belum memeluk Islam", a: "Abu Thalib" },
+            { q: "Tahun duka cita dimana paman dan istri Nabi wafat", a: "Amul Huzni" },
+            { q: "Sebutan untuk penduduk Makkah yang hijrah ke Madinah", a: "Muhajirin" },
+            { q: "Sebutan untuk penduduk Madinah yang menolong kaum yang hijrah", a: "Anshar" },
+            { q: "Nama kota Madinah sebelum kedatangan Nabi Muhammad SAW", a: "Yatsrib" },
+            { q: "Sistem kepercayaan menyembah banyak dewa/berhala", a: "Politeisme" },
+            { q: "Perjanjian persaudaraan dan perlindungan di Madinah", a: "Piagam Madinah" },
+            { q: "Perjalanan malam Nabi dari Makkah ke Masjidil Aqsa lalu ke Sidratul Muntaha", a: "Isra' Mi'raj" }
+        ]
+    };
+
+    let timerInterval;
+    let timeRemaining = TIME_LIMIT;
+    let userRole = '';
+    let currentUser = '';
+    let currentClass = '';
+    let currentPresensi = '';
+    
+    // Inisialisasi Bank Soal di localStorage
+    if(!localStorage.getItem('bankSoal')) {
+        localStorage.setItem('bankSoal', JSON.stringify(defaultQuestions));
+    }
+
+    function toggleLoginFields() {
+        const role = document.getElementById('login-role').value;
+        if(role === 'admin') {
+            document.getElementById('fg-kelas').classList.add('hidden');
+            document.getElementById('lbl-username').innerText = "Username Admin:";
+            document.getElementById('lbl-password').innerText = "Password Admin:";
+            document.getElementById('login-password').type = "password";
+        } else {
+            document.getElementById('fg-kelas').classList.remove('hidden');
+            document.getElementById('lbl-username').innerText = "Nama Lengkap (Username):";
+            document.getElementById('lbl-password').innerText = "No. Presensi (Password):";
+            document.getElementById('login-password').type = "number";
+        }
+    }
+
+    function login() {
+        const role = document.getElementById('login-role').value;
+        const user = document.getElementById('login-username').value.trim();
+        const pass = document.getElementById('login-password').value.trim();
+        const kls = document.getElementById('login-kelas').value;
+
+        if(!user || !pass) return alert("Mohon lengkapi data login!");
+
+        if(role === 'admin') {
+            if(user === localStorage.getItem('adminUser') && pass === localStorage.getItem('adminPass')) {
+                userRole = 'admin';
+                document.getElementById('page-login').classList.add('hidden');
+                document.getElementById('page-admin').classList.remove('hidden');
+                document.getElementById('json-editor').value = localStorage.getItem('bankSoal');
+            } else {
+                alert("Username atau Password Admin salah!");
+            }
+        } else {
+            // Siswa Login
+            const attemptKey = `attempt_${user}_${kls}_${pass}`;
+            let attempts = parseInt(localStorage.getItem(attemptKey) || '0');
+            
+            if(attempts >= MAX_ATTEMPTS) {
+                alert("Maaf, Anda telah melebihi batas maksimal pengerjaan (2 kali).");
+                return;
+            }
+
+            userRole = 'siswa';
+            currentUser = user;
+            currentClass = kls;
+            currentPresensi = pass;
+            
+            localStorage.setItem(attemptKey, attempts + 1);
+            startExam('siswa');
+        }
+    }
+
+    function logout() {
+        clearInterval(timerInterval);
+        document.getElementById('page-admin').classList.add('hidden');
+        document.getElementById('page-exam').classList.add('hidden');
+        document.getElementById('page-result').classList.add('hidden');
+        document.getElementById('page-login').classList.remove('hidden');
+        document.getElementById('login-username').value = '';
+        document.getElementById('login-password').value = '';
+    }
+
+    function showEditLogo() {
+        const newLogo = prompt("Masukkan URL Logo Baru:", localStorage.getItem('appLogo'));
+        if(newLogo) {
+            localStorage.setItem('appLogo', newLogo);
+            document.getElementById('app-logo').src = newLogo;
+            alert("Logo berhasil diperbarui!");
+        }
+    }
+
+    function showEditPassword() {
+        const newPass = prompt("Masukkan Password Admin Baru:");
+        if(newPass) {
+            localStorage.setItem('adminPass', newPass);
+            alert("Password berhasil diubah!");
+        }
+    }
+
+    function saveQuestions() {
+        try {
+            const data = JSON.parse(document.getElementById('json-editor').value);
+            if(data.pg && data.pgk && data.jodohkan) {
+                localStorage.setItem('bankSoal', JSON.stringify(data));
+                alert("Bank Soal berhasil disimpan!");
+            } else {
+                alert("Format JSON tidak sesuai. Harus ada array 'pg', 'pgk', dan 'jodohkan'.");
+            }
+        } catch (e) {
+            alert("Terjadi kesalahan parsing JSON. Pastikan format valid.");
+        }
+    }
+
+    function startExam(mode) {
+        if(mode === 'admin') {
+            document.getElementById('page-admin').classList.add('hidden');
+            currentUser = "Admin (Uji Coba)";
+            currentClass = "Mode Guru";
+            currentPresensi = "00";
+        } else {
+            document.getElementById('page-login').classList.add('hidden');
+        }
+
+        document.getElementById('page-exam').classList.remove('hidden');
+        document.getElementById('exam-student-name').innerText = `Nama: ${currentUser}`;
+        document.getElementById('exam-student-class').innerText = `Kelas: ${currentClass}`;
+
+        renderQuestions();
+        
+        timeRemaining = TIME_LIMIT;
+        timerInterval = setInterval(() => {
+            timeRemaining--;
+            let m = Math.floor(timeRemaining / 60);
+            let s = timeRemaining % 60;
+            document.getElementById('time-display').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+            if(timeRemaining <= 0) {
+                clearInterval(timerInterval);
+                alert("Waktu habis! Jawaban akan dikumpulkan otomatis.");
+                submitExam();
+            }
+        }, 1000);
+    }
+
+    function renderQuestions() {
+        const container = document.getElementById('exam-content');
+        container.innerHTML = '';
+        const soal = JSON.parse(localStorage.getItem('bankSoal'));
+        let qNum = 1;
+
+        // Render PG
+        container.innerHTML += `<h3>A. Pilihan Ganda (Pilih 1 Jawaban Tepat)</h3>`;
+        soal.pg.forEach((item, index) => {
+            let html = `<div class="question-box"><p><strong>${qNum}.</strong> ${item.q}</p><div class="options">`;
+            item.options.forEach((opt, oIndex) => {
+                html += `<label><input type="radio" name="pg_${index}" value="${oIndex}"> ${opt}</label>`;
+            });
+            html += `</div></div>`;
+            container.innerHTML += html;
+            qNum++;
+        });
+
+        // Render PGK
+        container.innerHTML += `<h3>B. Pilihan Ganda Kompleks (Pilih 2 atau lebih jawaban yang benar)</h3>`;
+        soal.pgk.forEach((item, index) => {
+            let html = `<div class="question-box"><p><strong>${qNum}.</strong> ${item.q}</p><div class="options">`;
+            item.options.forEach((opt, oIndex) => {
+                html += `<label><input type="checkbox" name="pgk_${index}" value="${oIndex}"> ${opt}</label>`;
+            });
+            html += `</div></div>`;
+            container.innerHTML += html;
+            qNum++;
+        });
+
+        // Render Menjodohkan
+        container.innerHTML += `<h3>C. Menjodohkan (Pilih pasangan yang tepat)</h3>`;
+        // Acak pilihan jawaban untuk dropdown
+        let answersArr = soal.jodohkan.map(i => i.a);
+        answersArr.sort(() => Math.random() - 0.5);
+
+        soal.jodohkan.forEach((item, index) => {
+            let html = `<div class="question-box match-row">
+                <div style="width:50%;"><strong>${qNum}.</strong> ${item.q}</div>
+                <select name="jodohkan_${index}">
+                    <option value="">-- Pilih Pasangan --</option>`;
+            answersArr.forEach(ans => {
+                html += `<option value="${ans}">${ans}</option>`;
+            });
+            html += `</select></div>`;
+            container.innerHTML += html;
+            qNum++;
+        });
+    }
+
+    function submitExam() {
+        clearInterval(timerInterval);
+        const soal = JSON.parse(localStorage.getItem('bankSoal'));
+        let skorPG = 0, skorPGK = 0, skorJodohkan = 0;
+        
+        // Kalkulasi PG (Bobot 2 per soal) = Max 30
+        soal.pg.forEach((item, index) => {
+            const selected = document.querySelector(`input[name="pg_${index}"]:checked`);
+            if(selected && parseInt(selected.value) === item.answer) {
+                skorPG += 2;
+            }
+        });
+
+        // Kalkulasi PGK (Bobot 4 per soal) = Max 40
+        // Nilai diberikan jika user memilih SEMUA jawaban benar tanpa salah pilih
+        soal.pgk.forEach((item, index) => {
+            const checkboxes = document.querySelectorAll(`input[name="pgk_${index}"]:checked`);
+            const selectedVals = Array.from(checkboxes).map(cb => parseInt(cb.value));
+            
+            const isCorrect = selectedVals.length === item.answer.length && 
+                              selectedVals.every(val => item.answer.includes(val));
+            if(isCorrect) skorPGK += 4;
+        });
+
+        // Kalkulasi Menjodohkan (Bobot 3 per soal) = Max 30
+        soal.jodohkan.forEach((item, index) => {
+            const selected = document.querySelector(`select[name="jodohkan_${index}"]`).value;
+            if(selected === item.a) {
+                skorJodohkan += 3;
+            }
+        });
+
+        const totalSkor = skorPG + skorPGK + skorJodohkan;
+
+        document.getElementById('page-exam').classList.add('hidden');
+        document.getElementById('page-result').classList.remove('hidden');
+        
+        document.getElementById('res-nama').innerText = currentUser;
+        document.getElementById('res-kelas').innerText = currentClass;
+        document.getElementById('res-presensi').innerText = currentPresensi;
+        document.getElementById('res-score').innerText = totalSkor;
+        
+        const statusEl = document.getElementById('res-status');
+        if(totalSkor >= KKM) {
+            statusEl.innerText = "TUNTAS (Memenuhi KKM)";
+            statusEl.style.color = "var(--primary)";
+        } else {
+            statusEl.innerText = "TIDAK TUNTAS (Di Bawah KKM)";
+            statusEl.style.color = "#dc2626";
+        }
+    }
+
+    function downloadResult() {
+        const score = document.getElementById('res-score').innerText;
+        const status = document.getElementById('res-status').innerText;
+        
+        const text = `HASIL ASESMEN SUMATIF SKI KELAS VII\nMTs Mu'allimin NU\n-----------------------------------\nNama Lengkap: ${currentUser}\nKelas: ${currentClass}\nNo. Presensi: ${currentPresensi}\nNILAI: ${score}\nSTATUS: ${status}\n-----------------------------------\nGuru Pengampu: Amirotul Kayyisah, S.Pd.`;
+        
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Hasil_SKI_${currentUser.replace(/\s+/g, '_')}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+</script>
+</body>
+</html>
